@@ -1,30 +1,21 @@
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-const fs = require("fs");
-const path = require("path");
-
-import { fileURLToPath } from "url";
-
-// Configura __dirname para ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
+import fs from "fs";
+import path from "path";
 import { exec } from "child_process";
 import { promisify } from "util";
-const Terser = require("terser");
+import * as Terser from "terser";
 
 export default run;
 
 function run({ folderRoot, output }) {
-  const id = Math.random().toString(36).replace("0.","");
+  const id = "temp";
   eliminarArchivoDeSalidaSiExiste();
   mergeJsxFiles({
-    inputDir: path.join(__dirname, folderRoot),
-    outputFile: path.join(__dirname, folderRoot, `app.merged.${id}.jsx`),
+    inputDir: folderRoot,
+    outputFile: path.join(folderRoot, `app.merged.${id}.jsx`),
   });
   mergerAllJSX({
-    appMergedJSX: `${folderRoot}/app.merged.${id}.jsx`,
-    AppMergedJS: `${folderRoot}/app.merged.${id}.js`,
+    appMergedJSX: path.join(folderRoot, `app.merged.${id}.jsx`),
+    AppMergedJS: path.join(folderRoot, `app.merged.${id}.js`),
     output,
   });
 }
@@ -47,7 +38,7 @@ function getAllJsxFiles(dir) {
     if (stat.isDirectory()) {
       // Si es un directorio, llama recursivamente
       jsxFiles = jsxFiles.concat(getAllJsxFiles(fullPath));
-    } else if (file.endsWith(".jsx")) {
+    } else if (file.endsWith(".jsx") && !file.endsWith(".temp")) {
       // Si es un archivo .jsx, lo agrega a la lista
       jsxFiles.push(fullPath);
     }
@@ -77,7 +68,7 @@ function mergeJsxFiles({ inputDir, outputFile }) {
 }
 
 // Ejecuta la función de combinación
-function mergerAllJSX({ appMergedJSX, AppMergedJS,output }) {
+function mergerAllJSX({ appMergedJSX, AppMergedJS, output }) {
   if (!appMergedJSX) {
     throw new Error("No hay ruta para transpilar");
   }

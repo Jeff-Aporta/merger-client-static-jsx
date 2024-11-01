@@ -9,7 +9,7 @@
 Para instalar la biblioteca, utiliza npm:
 
 ```bash
-npm install merger-client-static-jsx
+npm install merger-client-static-jsx --save-dev babel-cli
 ```
 
 ## Uso

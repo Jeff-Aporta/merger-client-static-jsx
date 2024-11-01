@@ -1,6 +1,7 @@
-import merger from "./index.js";
+import merger from "./merger.js";
+import path from "path";
 
 merger({
-  folderRoot: "test",
-  output: "test/app.client.merged.min.js",
+  folderRoot: "public",
+  output: path.join("public", "app.client.merged.min.js"),
 });

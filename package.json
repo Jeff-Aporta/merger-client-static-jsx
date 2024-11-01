@@ -1,7 +1,7 @@
 {
   "name": "merger-client-static-jsx",
-  "version": "1.0.0",
-  "main": "index.js",
+  "version": "1.0.4",
+  "main": "merger.js",
   "type": "module",
   "scripts": {},
   "keywords": [],
