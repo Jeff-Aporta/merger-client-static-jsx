@@ -3,17 +3,46 @@ import path from "path";
 import { exec } from "child_process";
 import { promisify } from "util";
 import * as Terser from "terser";
+import next_version from "./next-version.js";
+import cssMerger from "./merger-css.js"
 
-export default run;
+export { merger, build_SASS, build_SASS_rollup, build_rollup, next_version, cssMerger };
 
-function run({ folderRoot, output }) {
+async function build_rollup() {
+  const execPromise = promisify(exec);
+  try {
+    await execPromise(`rollup -c`);
+    console.log("rollup ejecutado con éxito:");
+  } catch (error) {
+    console.error("Errores durante la construcción del rollup:", error);
+  }
+}
+
+async function build_SASS({ mainSASS, outCSS }) {
+  const execPromise = promisify(exec);
+  try {
+    await execPromise(
+      `sass --no-source-map --style compressed ${mainSASS}:${outCSS}`
+    );
+    console.log("SASS construido con éxito:");
+  } catch (error) {
+    console.error("Errores durante la construcción del sass:", error);
+  }
+}
+
+async function build_SASS_rollup({ mainSASS, outCSS }) {
+  build_SASS({ mainSASS, outCSS })
+  build_rollup();
+}
+
+function merger({ folderRoot, output }) {
   const id = "temp";
   eliminarArchivoDeSalidaSiExiste();
   mergeJsxFiles({
     inputDir: folderRoot,
     outputFile: path.join(folderRoot, `app.merged.${id}.jsx`),
   });
-  mergerAllJSX({
+  transpileJSXinJS({
     appMergedJSX: path.join(folderRoot, `app.merged.${id}.jsx`),
     AppMergedJS: path.join(folderRoot, `app.merged.${id}.js`),
     output,
@@ -23,7 +52,7 @@ function run({ folderRoot, output }) {
 function eliminarArchivoDeSalidaSiExiste() {
   try {
     fs.unlinkSync(outputFile);
-  } catch (e) {}
+  } catch (e) { }
 }
 
 // Función recursiva para obtener todos los archivos .jsx
@@ -68,7 +97,7 @@ function mergeJsxFiles({ inputDir, outputFile }) {
 }
 
 // Ejecuta la función de combinación
-function mergerAllJSX({ appMergedJSX, AppMergedJS, output }) {
+function transpileJSXinJS({ appMergedJSX, AppMergedJS, output }) {
   if (!appMergedJSX) {
     throw new Error("No hay ruta para transpilar");
   }
@@ -94,6 +123,9 @@ function mergerAllJSX({ appMergedJSX, AppMergedJS, output }) {
       }, 1000);
     } catch (error) {
       // Manejo de errores
+      try {
+        fs.unlinkSync(appMergedJSX);
+      } catch (e) { }
       console.error("Error durante la transpilación:", error);
     }
   }
@@ -109,6 +141,9 @@ function jsmerged2min({ inputFile, outputFile }) {
       fs.writeFileSync(outputFile, minified.code, "utf-8");
       fs.unlinkSync(inputFile);
     } catch (minifyError) {
+      try {
+        fs.unlinkSync(inputFile);
+      } catch (e) { }
       console.error("Error durante la minificación:", minifyError);
     }
   });
